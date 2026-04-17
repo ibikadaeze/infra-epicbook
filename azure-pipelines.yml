@@ -1,0 +1,46 @@
+trigger: none
+
+variables:
+- group: epicbook-infra-secrets
+
+stages:
+- stage: TerraformDestroy
+  displayName: Destroy Infrastructure
+  jobs:
+  - job: Terraform_Destroy
+    displayName: Terraform Destroy
+    pool:
+      name: self-hosted-agent-pool
+
+    steps:
+    - checkout: self
+
+    - task: DownloadSecureFile@1
+      name: download_ssh_key
+      inputs:
+        secureFile: id_rsa.pub
+
+    - script: |
+        mkdir -p ~/.ssh
+        cp "$(download_ssh_key.secureFilePath)" ~/.ssh/id_rsa.pub
+        chmod 600 ~/.ssh/id_rsa.pub
+        terraform version
+      displayName: Prepare SSH Public Key
+
+    - task: AzureCLI@2
+      displayName: Terraform Init and Destroy
+      inputs:
+        azureSubscription: epicbook-connect
+        scriptType: bash
+        scriptLocation: inlineScript
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        inlineScript: |
+          pwd
+          ls -la
+          find . -maxdepth 2 \( -name "*.tf" -o -name "terraform.tfvars" \)
+
+          terraform init -input=false
+          terraform destroy -input=false -auto-approve \
+            -var-file="terraform.tfvars" \
+            -var="ssh_public_key=~/.ssh/id_rsa.pub" \
+            -var="db_admin_password=$(db_admin_password)"
