@@ -5,6 +5,8 @@ trigger:
   paths:
     include:
       - terraform/**
+variables:
+- group: epicbook-infra-secrets
 
 stages:
 - stage: Terraform
