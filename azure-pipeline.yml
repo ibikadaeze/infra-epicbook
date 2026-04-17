@@ -38,7 +38,7 @@ stages:
         azureSubscription: epicbook-connect
         scriptType: bash
         scriptLocation: inlineScript
-        workingDirectory: $(System.DefaultWorkingDirectory)/terraform
+        workingDirectory: $(System.DefaultWorkingDirectory)
         inlineScript: |
           terraform version
           terraform init -input=false
